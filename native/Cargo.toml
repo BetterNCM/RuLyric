@@ -1,0 +1,13 @@
+[package]
+name = "RuLyrics"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+betterncm-macro = { path = "betterncm-native-plugin-rs/betterncm-macro" }
+betterncm-plugin-api = { path = "betterncm-native-plugin-rs/betterncm-plugin-api" }
+cef = { path = "betterncm-native-plugin-rs/cef" }
+cef-sys = { path = "betterncm-native-plugin-rs/cef-sys" }
