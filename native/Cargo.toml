@@ -11,3 +11,14 @@ betterncm-macro = { path = "betterncm-native-plugin-rs/betterncm-macro" }
 betterncm-plugin-api = { path = "betterncm-native-plugin-rs/betterncm-plugin-api" }
 cef = { path = "betterncm-native-plugin-rs/cef" }
 cef-sys = { path = "betterncm-native-plugin-rs/cef-sys" }
+druid = { git = "https://github.com/linebender/druid", features = [ "raw-win-handle"]  }
+lazy_static = "*"
+winapi = { version = "0.3", features = ["winuser"] }
+raw-window-handle-5 = { package = "raw-window-handle", version = "0.5.0" }
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

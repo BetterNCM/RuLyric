@@ -1,6 +1,13 @@
 $env:LIBCLANG_PATH = 'J:\Program Files (x86)\LLVM\bin\'
-
 Set-Location native;
-cargo build;
-Copy-Item ./target/debug/RuLyrics.dll ../RuLyrics.dll
-Set-Location ..;
+Try {
+    cargo build;
+    taskkill.exe /f /im cloudmusic.exe
+    Start-Sleep 1
+    Remove-Item ../RuLyrics.dll
+    Copy-Item -Force ./target/debug/RuLyrics.dll ../RuLyrics.dll
+    Set-Location ..;
+}
+Catch {
+    Set-Location ..;
+}
