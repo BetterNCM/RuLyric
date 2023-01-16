@@ -8,7 +8,7 @@ pub struct LyricsWord {
     pub lyric_duration: u64,
 }
 
-#[derive(Clone, Debug, PartialEq,Data)]
+#[derive(Clone, Debug, PartialEq, Data)]
 pub struct LyricsData {
     pub lyric_str: String,
     pub lyric_line_num: usize,
@@ -30,19 +30,34 @@ impl LyricsData {
                     lyric_word: s.to_string(),
                     lyric_duration: 3000,
                 })
-                .collect(),unsafe {
-                    COUNT_LINE_NUM += 1;
-                    COUNT_LINE_NUM
-                }
+                .collect(),
+            unsafe {
+                COUNT_LINE_NUM += 1;
+                COUNT_LINE_NUM
+            },
         )
     }
+
+    pub fn from_text_duration(str: String, duration: u64) -> LyricsData {
+        LyricsData::from_lyrics(
+            vec![LyricsWord {
+                lyric_word: str,
+                lyric_duration: duration,
+            }],
+            unsafe {
+                COUNT_LINE_NUM += 1;
+                COUNT_LINE_NUM
+            },
+        )
+    }
+
     pub fn from_lyrics(lyrics: Vec<LyricsWord>, line_num: usize) -> LyricsData {
         LyricsData {
             font: FontConfig {
                 font_family: "Noto Sans SC".to_string(),
-                font_size: 18.,
+                font_size: 16.,
                 font_color: druid::Color::WHITE,
-                font_weight: FontWeight::NORMAL
+                font_weight: FontWeight::NORMAL,
             },
             lyric_line_num: line_num,
             lyric_str: lyrics
@@ -74,5 +89,13 @@ impl LyricsData {
             words += 1;
         }
         (words, 0.)
+    }
+
+    pub fn get_full_duration(&self) -> u64 {
+        let mut time = 0;
+        for t in &self.lyrics {
+            time += t.lyric_duration;
+        }
+        time
     }
 }

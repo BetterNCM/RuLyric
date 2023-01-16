@@ -4,13 +4,13 @@ extern crate lazy_static;
 static mut DATA_SENDER: Option<ExtEventSink> = None;
 pub static mut WIN_HWND: Option<DWORD> = None;
 
-use std::{iter::once, os::windows::prelude::OsStrExt, fs};
+use std::{fs, iter::once, os::windows::prelude::OsStrExt};
 
 use betterncm_macro::betterncm_native_call;
 use betterncm_plugin_api::*;
 use cef::CefV8Value;
 use cef_sys::DWORD;
-use druid::{AppLauncher, Color, ExtEventSink, WindowDesc, FontWeight};
+use druid::{AppLauncher, Color, ExtEventSink, FontWeight, WindowDesc};
 
 use crate::{
     lyrics_app::{ui_builder, LyricAppData},
@@ -41,9 +41,8 @@ fn init_lyrics_app() {
 }
 
 #[betterncm_native_call]
-fn update_lyrics(line: CefV8Value, line_ext: CefV8Value){
+fn update_lyrics(line: CefV8Value, line_ext: CefV8Value) {
     if line.is_string() {
-        
         let line = line.get_string_value().to_string();
         unsafe {
             DATA_SENDER
@@ -66,29 +65,35 @@ fn update_lyrics(line: CefV8Value, line_ext: CefV8Value){
                 });
             }
 
-            DATA_SENDER
-                .clone()
-                .unwrap()
-                .add_idle_callback(move |data: &mut LyricAppData| {
-                    data.current_lyric =
-                        LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
+            if line_ext.is_string() {
+                let line_ext = line_ext.get_string_value().to_string();
+                unsafe {
+                    DATA_SENDER
+                        .clone()
+                        .unwrap()
+                        .add_idle_callback(move |data: &mut LyricAppData| {
+                            data.current_lyric =
+                                LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
 
-                    data.current_lyric.font.font_weight = FontWeight::BOLD;
-                });
-        }
-    }
+                            data.current_lyric.font.font_weight = FontWeight::BOLD;
 
-    if line_ext.is_string() {
-        let line_ext = line_ext.get_string_value().to_string();
-        unsafe {
-            DATA_SENDER
-                .clone()
-                .unwrap()
-                .add_idle_callback(|data: &mut LyricAppData| {
-                    data.current_lyric_ext = LyricsData::new_test(line_ext);
-                    data.current_lyric_ext.font.font_color = Color::TRANSPARENT;
-                    data.current_lyric_ext.font.font_size = 16.;
-                });
+                            data.current_lyric_ext = LyricsData::from_text_duration(line_ext,data.current_lyric.get_full_duration());
+                            data.current_lyric_ext.font.font_color =
+                                Color::rgba8(255, 255, 255, 20);
+                            data.current_lyric_ext.font.font_size = 14.;
+                        });
+                }
+            } else {
+                DATA_SENDER
+                    .clone()
+                    .unwrap()
+                    .add_idle_callback(move |data: &mut LyricAppData| {
+                        data.current_lyric =
+                            LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
+
+                        data.current_lyric.font.font_weight = FontWeight::BOLD;
+                    });
+            }
         }
     }
 }
