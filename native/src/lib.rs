@@ -4,13 +4,13 @@ extern crate lazy_static;
 static mut DATA_SENDER: Option<ExtEventSink> = None;
 pub static mut WIN_HWND: Option<DWORD> = None;
 
-use std::{iter::once, os::windows::prelude::OsStrExt};
+use std::{iter::once, os::windows::prelude::OsStrExt, fs};
 
 use betterncm_macro::betterncm_native_call;
 use betterncm_plugin_api::*;
 use cef::CefV8Value;
 use cef_sys::DWORD;
-use druid::{AppLauncher, ExtEventSink, WindowDesc};
+use druid::{AppLauncher, Color, ExtEventSink, WindowDesc, FontWeight};
 
 use crate::{
     lyrics_app::{ui_builder, LyricAppData},
@@ -35,13 +35,15 @@ fn init_lyrics_app() {
 
         app.launch(LyricAppData {
             current_lyric: LyricsData::new_test("".to_string()),
+            current_lyric_ext: LyricsData::new_test("".to_string()),
         })
     });
 }
 
 #[betterncm_native_call]
-fn update_lyrics(line: CefV8Value, _line_ext: CefV8Value) {
+fn update_lyrics(line: CefV8Value, line_ext: CefV8Value){
     if line.is_string() {
+        
         let line = line.get_string_value().to_string();
         unsafe {
             DATA_SENDER
@@ -70,6 +72,22 @@ fn update_lyrics(line: CefV8Value, _line_ext: CefV8Value) {
                 .add_idle_callback(move |data: &mut LyricAppData| {
                     data.current_lyric =
                         LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
+
+                    data.current_lyric.font.font_weight = FontWeight::BOLD;
+                });
+        }
+    }
+
+    if line_ext.is_string() {
+        let line_ext = line_ext.get_string_value().to_string();
+        unsafe {
+            DATA_SENDER
+                .clone()
+                .unwrap()
+                .add_idle_callback(|data: &mut LyricAppData| {
+                    data.current_lyric_ext = LyricsData::new_test(line_ext);
+                    data.current_lyric_ext.font.font_color = Color::TRANSPARENT;
+                    data.current_lyric_ext.font.font_size = 16.;
                 });
         }
     }
@@ -101,9 +119,16 @@ fn embed_into_taskbar() {
         let mut lExStyle = GetWindowLongA(druidwin, GWL_EXSTYLE);
         lExStyle &= !(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_WINDOWEDGE) as i32;
         SetWindowLongA(druidwin, GWL_EXSTYLE, lExStyle | WS_EX_NOACTIVATE as i32);
-        winapi::um::winuser::MoveWindow(druidwin, 20, 10, 400, 70, 0);
-
         winapi::um::winuser::SetParent(druidwin, traywin);
+
+        winapi::um::winuser::MoveWindow(
+            druidwin,
+            20,
+            10,
+            400,
+            70,
+            (SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
+        );
     }
 }
 

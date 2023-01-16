@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
 use druid::{
-    piet::{D2DTextLayout, Text, TextLayout, TextLayoutBuilder},
-    Color, Data, Event, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext, Size, Widget,
+    piet::{D2DTextLayout, Text, TextAttribute, TextLayout, TextLayoutBuilder},
+    Color, Data, Event, FontWeight, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext,
+    Size, Widget,
 };
 
 use raw_window_handle_5::RawWindowHandle;
@@ -133,9 +134,11 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                 t.new_text_layout(new_lyric.lyric_str.clone())
                     .text_color(druid::Color::rgba(1., 1., 1., 0.3))
                     .font(
-                        t.font_family(font.font_family.as_str()).unwrap(),
+                        t.font_family(font.font_family.as_str())
+                            .unwrap_or(druid::FontFamily::SYSTEM_UI),
                         font.font_size,
                     )
+                    .default_attribute(TextAttribute::Weight(font.font_weight))
                     .build()
                     .unwrap(),
             );
@@ -146,9 +149,11 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                 let mut get_width = |char: &str| {
                     t.new_text_layout(char.to_string())
                         .font(
-                            t.font_family(font.font_family.as_str()).unwrap(),
+                            t.font_family(font.font_family.as_str())
+                                .unwrap_or(druid::FontFamily::SYSTEM_UI),
                             font.font_size,
                         )
+                        .default_attribute(TextAttribute::Weight(font.font_weight))
                         .build()
                         .unwrap()
                         .size()
@@ -170,13 +175,17 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
     }
     fn layout(
         &mut self,
-        _ctx: &mut druid::LayoutCtx,
+        ctx: &mut druid::LayoutCtx,
         _bc: &druid::BoxConstraints,
         _data: &T,
         _env: &druid::Env,
     ) -> druid::Size {
         if let Some(text) = &self.lyric_text_bg {
             let mut size = text.size();
+            let winw = ctx.window().get_size().width;
+            if winw < size.width {
+                size.width = winw;
+            }
             size
         } else {
             Size::new(0., 0.)
@@ -196,7 +205,7 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                                  color: Color| {
                 let t = ctx.text();
 
-                let space_x= if word.ends_with(" ") {
+                let space_x = if word.ends_with(" ") {
                     self.space_width
                 } else {
                     0.
@@ -206,9 +215,11 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                     .new_text_layout(word)
                     .text_color(color)
                     .font(
-                        t.font_family(lyric_line.font.font_family.as_str()).unwrap(),
+                        t.font_family(lyric_line.font.font_family.as_str())
+                            .unwrap_or(druid::FontFamily::SYSTEM_UI),
                         lyric_line.font.font_size,
                     )
+                    .default_attribute(TextAttribute::Weight(lyric_line.font.font_weight))
                     .build()
                     .unwrap();
 

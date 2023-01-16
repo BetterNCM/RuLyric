@@ -1,4 +1,4 @@
-use druid::Data;
+use druid::{Data, FontWeight};
 
 use super::font::FontConfig;
 
@@ -40,8 +40,9 @@ impl LyricsData {
         LyricsData {
             font: FontConfig {
                 font_family: "Noto Sans SC".to_string(),
-                font_size: 20.,
+                font_size: 18.,
                 font_color: druid::Color::WHITE,
+                font_weight: FontWeight::NORMAL
             },
             lyric_line_num: line_num,
             lyric_str: lyrics

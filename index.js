@@ -20,31 +20,44 @@ plugin.onLoad(() => {
     })
 
 
-    betterncm.utils.waitForElement("#applemusic-like-lyrics-view").then((lyric) => {
-        mode = 2;
+    let lastUpd = 0;
+    let lastStr = "";
+    const amllObserver = new MutationObserver(mutations => {
+        try {
+            if (document.querySelector(".am-lyric-line-selected .am-lyric-line-dynamic") == null
+                || new Date().getTime() - lastUpd < 100) return;
+            console.log("AMLL Upd")
+            mode = 2;
+            lastUpd = new Date().getTime();
 
-        let lastStr;
 
-        betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
+            const lrc = [...document.querySelector(".am-lyric-line-selected .am-lyric-line-dynamic").children].map(v => [
+                v.firstChild.innerText, parseInt(v.firstChild.style.animationDuration)
+            ]);
+            const sLrc = lrc.map(v => v[0]).join('')
+            if (lastStr === sLrc) return;
+            lastStr = sLrc
 
-        setInterval(()=>{
-            try{
-                const lrc=[...document.querySelector(".am-lyric-line-selected .am-lyric-line-dynamic").children].map(v => [
-                    v.firstChild.innerText, parseInt(v.firstChild.style.animationDuration)
-                ]);
-                const sLrc=lrc.map(v=>v[0]).join('')
-                if(lastStr===sLrc)return;
-                lastStr=sLrc
-
-                betterncm_native.native_plugin.call('rulyrics.update_lyrics', [
-                    [
-                        lrc, cnt++
-                    ],
-                    document.querySelector(".am-lyric-line-selected .am-lyric-line-translated")?.innerText || ""
-                ])
-            }catch(e){
-                console.error(e)
+            betterncm_native.native_plugin.call('rulyrics.update_lyrics', [
+                [
+                    lrc, cnt++
+                ],
+                document.querySelector(".am-lyric-line-selected .am-lyric-line-translated")?.innerText || ""
+            ])
+        } catch (e) {
+            console.error(e)
+        }
+    });
+    window.obs = amllObserver
+    betterncm.utils.waitForElement(".g-singlec-ct").then((lyric) => {
+        let amv;
+        setInterval(() => {
+            if (amv !== document.querySelector("#applemusic-like-lyrics-view")) {
+                amv = document.querySelector("#applemusic-like-lyrics-view");
+                amllObserver.observe(amv, { attributes: true, childList: true, subtree: true });
             }
-        },10)
+
+        }, 1000)
     })
+    betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
 });
