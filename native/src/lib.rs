@@ -24,7 +24,6 @@ fn init_lyrics_app() {
         let main_window = WindowDesc::new(ui_builder())
             .show_titlebar(false)
             .transparent(true)
-            .resizable(false)
             .window_size((400.0, 70.0));
 
         let app = AppLauncher::with_window(main_window).log_to_console();
