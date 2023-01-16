@@ -28,7 +28,7 @@ impl LyricsData {
             str.split('\u{a0}')
                 .map(|s| LyricsWord {
                     lyric_word: s.to_string(),
-                    lyric_duration: 200,
+                    lyric_duration: 3000,
                 })
                 .collect(),unsafe {
                     COUNT_LINE_NUM += 1;
