@@ -2,7 +2,7 @@ use druid::widget::{Button, Flex, Label};
 use druid::{AppLauncher, LocalizedString, PlatformError, Widget, WidgetExt, WindowDesc, Data};
 
 use crate::model::lyrics::LyricsData;
-use crate::widgets::lyrics::LyricLine;
+use crate::widgets::lyrics::LyricLineWidget;
 
 #[derive(Data,Clone,Debug)]
 pub struct LyricAppData{
@@ -10,7 +10,7 @@ pub struct LyricAppData{
 }
 
 pub fn ui_builder() -> impl Widget<LyricAppData> {
-    let text = LyricLine::new(|data:&LyricAppData|{
+    let text = LyricLineWidget::new(|data:&LyricAppData|{
         LyricsData::new(&data.current_lyric)
     });
 
