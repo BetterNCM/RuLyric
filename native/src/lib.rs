@@ -8,12 +8,14 @@ use std::{iter::once, os::windows::prelude::OsStrExt};
 
 use betterncm_macro::betterncm_native_call;
 use betterncm_plugin_api::*;
-use cef::{CefV8Value};
+use cef::CefV8Value;
 use cef_sys::DWORD;
 use druid::{AppLauncher, ExtEventSink, WindowDesc};
 
-
-use crate::lyrics_app::{ui_builder, LyricAppData};
+use crate::{
+    lyrics_app::{ui_builder, LyricAppData},
+    model::lyrics::{LyricsData, LyricsWord},
+};
 mod lyrics_app;
 mod model;
 mod widgets;
@@ -32,7 +34,7 @@ fn init_lyrics_app() {
         }
 
         app.launch(LyricAppData {
-            current_lyric: "".to_string(),
+            current_lyric: LyricsData::new_test("".to_string()),
         })
     });
 }
@@ -46,7 +48,28 @@ fn update_lyrics(line: CefV8Value, _line_ext: CefV8Value) {
                 .clone()
                 .unwrap()
                 .add_idle_callback(|data: &mut LyricAppData| {
-                    data.current_lyric = line;
+                    data.current_lyric = LyricsData::new_test(line);
+                });
+        }
+    } else if line.is_object() {
+        unsafe {
+            let line_num = line.get_value_byindex(1).get_uint_value();
+            let words = line.get_value_byindex(0);
+            let mut lyrics = vec![];
+            for i in 0..words.get_array_length() {
+                let val = words.get_value_byindex(i as isize);
+                lyrics.push(LyricsWord {
+                    lyric_word: val.get_value_byindex(0).get_string_value().to_string(),
+                    lyric_duration: val.get_value_byindex(1).get_uint_value() as u64,
+                });
+            }
+
+            DATA_SENDER
+                .clone()
+                .unwrap()
+                .add_idle_callback(move |data: &mut LyricAppData| {
+                    data.current_lyric =
+                        LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
                 });
         }
     }
@@ -77,11 +100,7 @@ fn embed_into_taskbar() {
 
         let mut lExStyle = GetWindowLongA(druidwin, GWL_EXSTYLE);
         lExStyle &= !(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_WINDOWEDGE) as i32;
-        SetWindowLongA(
-            druidwin,
-            GWL_EXSTYLE,
-            lExStyle | WS_EX_NOACTIVATE as i32,
-        );
+        SetWindowLongA(druidwin, GWL_EXSTYLE, lExStyle | WS_EX_NOACTIVATE as i32);
         winapi::um::winuser::MoveWindow(druidwin, 20, 10, 400, 70, 0);
 
         winapi::um::winuser::SetParent(druidwin, traywin);

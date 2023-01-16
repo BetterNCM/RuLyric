@@ -1,12 +1,11 @@
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
 use druid::{
-    piet::{D2DTextLayout, Text, TextLayout, TextLayoutBuilder}, Data, Event, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext, Size,
-    Widget,
+    piet::{D2DTextLayout, Text, TextLayout, TextLayoutBuilder},
+    Color, Data, Event, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext, Size, Widget,
 };
 
 use raw_window_handle_5::RawWindowHandle;
-
 
 use crate::model::lyrics::LyricsData;
 
@@ -178,7 +177,6 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
     ) -> druid::Size {
         if let Some(text) = &self.lyric_text_bg {
             let mut size = text.size();
-            size.width += self.space_width;
             size
         } else {
             Size::new(0., 0.)
@@ -189,29 +187,38 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
         if let (Some(ref text_bg), Some(ref lyric_line)) = (&self.lyric_text_bg, &self.lyric_line) {
             let lyrics_origin = Point::new(0. - self.x_movement, 0.);
 
-            ctx.draw_text(text_bg, lyrics_origin);
+            // ctx.draw_text(text_bg, lyrics_origin);
 
-            let mut draw_word =
-                |word: String, cur_x: &mut f64, complete: f64, ctx: &mut druid::PaintCtx| {
-                    let t = ctx.text();
+            let mut draw_word = |word: String,
+                                 cur_x: &mut f64,
+                                 complete: f64,
+                                 ctx: &mut druid::PaintCtx,
+                                 color: Color| {
+                let t = ctx.text();
 
-                    let layout = t
-                        .new_text_layout(word)
-                        .text_color(lyric_line.font.font_color)
-                        .font(
-                            t.font_family(lyric_line.font.font_family.as_str()).unwrap(),
-                            lyric_line.font.font_size,
-                        )
-                        .build()
-                        .unwrap();
+                let space_x= if word.ends_with(" ") {
+                    self.space_width
+                } else {
+                    0.
+                };
 
-                    let size = layout.size();
-                    let pos = Point::new(lyrics_origin.x + *cur_x, lyrics_origin.y);
+                let layout = t
+                    .new_text_layout(word)
+                    .text_color(color)
+                    .font(
+                        t.font_family(lyric_line.font.font_family.as_str()).unwrap(),
+                        lyric_line.font.font_size,
+                    )
+                    .build()
+                    .unwrap();
 
-                    if complete != 1. {
-                        let cur_width = size.width * complete + pos.x + self.x_movement;
+                let size = layout.size();
+                let pos = Point::new(lyrics_origin.x + *cur_x, lyrics_origin.y);
 
-                        macro_rules! min {
+                if complete != 1. {
+                    let cur_width = size.width * complete + pos.x + self.x_movement;
+
+                    macro_rules! min {
                             ($x: expr) => ($x);
                             ($x: expr, $($z: expr),+) => {{
                                 let y = min!($($z),*);
@@ -223,7 +230,7 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                             }}
                         }
 
-                        macro_rules! max {
+                    macro_rules! max {
                             ($x: expr) => ($x);
                             ($x: expr, $($z: expr),+) => {{
                                 let y = max!($($z),*);
@@ -235,27 +242,39 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                             }}
                         }
 
-                        let winw = ctx.window().get_size().width;
-                        self.x_movement = {
-                            let mv = cur_width + winw / 2. - winw;
-                            let maxmv = self.lyric_text_bg.as_ref().unwrap().size().width - winw;
-                            max!(min!(mv, maxmv), 0.)
-                        };
+                    let winw = ctx.window().get_size().width;
+                    self.x_movement = {
+                        let mv = cur_width + winw / 2. - winw;
+                        let maxmv = self.lyric_text_bg.as_ref().unwrap().size().width - winw;
+                        max!(min!(mv, maxmv), 0.)
+                    };
 
-                        ctx.save().unwrap();
-                        ctx.clip(druid::kurbo::Rect::from_origin_size(
-                            pos,
-                            (size.width * complete, size.height),
-                        ));
+                    ctx.save().unwrap();
+                    ctx.clip(druid::kurbo::Rect::from_origin_size(
+                        pos,
+                        (size.width * complete, size.height),
+                    ));
 
-                        ctx.draw_text(&layout, pos);
-                        ctx.restore().unwrap();
-                    } else {
-                        ctx.draw_text(&layout, pos);
-                    }
+                    ctx.draw_text(&layout, pos);
+                    ctx.restore().unwrap();
+                } else {
+                    ctx.draw_text(&layout, pos);
+                }
 
-                    *cur_x += size.width + self.space_width;
-                };
+                *cur_x += size.width + space_x;
+            };
+
+            let mut cur_x = 0.;
+
+            for (index, word) in lyric_line.lyrics.iter().enumerate() {
+                draw_word(
+                    word.lyric_word.clone(),
+                    &mut cur_x,
+                    1.,
+                    ctx,
+                    Color::rgba8(255, 255, 255, 80),
+                );
+            }
 
             let current_lyric = lyric_line.get_per_word_lyrics_time(self.current_time);
             let mut cur_x = 0.;
@@ -274,6 +293,7 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                         current_lyric.1
                     },
                     ctx,
+                    lyric_line.font.font_color,
                 );
             }
         }

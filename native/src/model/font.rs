@@ -1,6 +1,6 @@
-use druid::Color;
+use druid::{Color, Data};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,Data)]
 pub struct FontConfig{
     pub font_family: String,
     pub font_size: f64,

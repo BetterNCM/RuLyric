@@ -6,12 +6,12 @@ use crate::widgets::lyrics::LyricLineWidget;
 
 #[derive(Data,Clone,Debug)]
 pub struct LyricAppData{
-    pub current_lyric: String
+    pub current_lyric: LyricsData
 }
 
 pub fn ui_builder() -> impl Widget<LyricAppData> {
     let text = LyricLineWidget::new(|data:&LyricAppData|{
-        LyricsData::new(&data.current_lyric)
+        data.current_lyric.clone()
     });
 
     Flex::column().with_child(text)
