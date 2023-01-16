@@ -1,15 +1,12 @@
-use std::{marker::PhantomData, sync::Arc};
+use std::{marker::PhantomData};
 
 use druid::{
-    kurbo::Shape,
-    piet::{D2DTextLayout, Text, TextLayout, TextLayoutBuilder},
-    widget::{Label, RawLabel},
-    ArcStr, Color, Data, Event, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext, Size,
+    piet::{D2DTextLayout, Text, TextLayout, TextLayoutBuilder}, Data, Event, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext, Size,
     Widget,
 };
 
 use raw_window_handle_5::RawWindowHandle;
-use winapi::um::winnt::LONG;
+
 
 use crate::model::lyrics::LyricsData;
 
@@ -44,12 +41,12 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
         &mut self,
         ctx: &mut druid::EventCtx,
         event: &druid::Event,
-        data: &mut T,
-        env: &druid::Env,
+        _data: &mut T,
+        _env: &druid::Env,
     ) {
         match event {
-            Event::MouseDown(e) => {}
-            Event::MouseMove(m) => {
+            Event::MouseDown(_e) => {}
+            Event::MouseMove(_m) => {
                 ctx.window().show_titlebar(false);
                 use winapi::um::winuser::*;
                 unsafe {
@@ -100,15 +97,15 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
         &mut self,
         ctx: &mut druid::LifeCycleCtx,
         event: &druid::LifeCycle,
-        data: &T,
-        env: &druid::Env,
+        _data: &T,
+        _env: &druid::Env,
     ) {
         if let LifeCycle::HotChanged(_) = event {
             ctx.request_paint();
         }
     }
 
-    fn update(&mut self, ctx: &mut druid::UpdateCtx, old_data: &T, data: &T, env: &druid::Env) {
+    fn update(&mut self, ctx: &mut druid::UpdateCtx, _old_data: &T, data: &T, _env: &druid::Env) {
         let new_lyric = (self.lyric_line_updater)(data);
 
         if let Some(LyricsData {
@@ -174,10 +171,10 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
     }
     fn layout(
         &mut self,
-        ctx: &mut druid::LayoutCtx,
-        bc: &druid::BoxConstraints,
-        data: &T,
-        env: &druid::Env,
+        _ctx: &mut druid::LayoutCtx,
+        _bc: &druid::BoxConstraints,
+        _data: &T,
+        _env: &druid::Env,
     ) -> druid::Size {
         if let Some(text) = &self.lyric_text_bg {
             let mut size = text.size();
@@ -188,7 +185,7 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
         }
     }
 
-    fn paint(&mut self, ctx: &mut druid::PaintCtx, data: &T, env: &druid::Env) {
+    fn paint(&mut self, ctx: &mut druid::PaintCtx, _data: &T, _env: &druid::Env) {
         if let (Some(ref text_bg), Some(ref lyric_line)) = (&self.lyric_text_bg, &self.lyric_line) {
             let lyrics_origin = Point::new(0. - self.x_movement, 0.);
 

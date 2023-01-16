@@ -4,14 +4,14 @@ extern crate lazy_static;
 static mut DATA_SENDER: Option<ExtEventSink> = None;
 pub static mut WIN_HWND: Option<DWORD> = None;
 
-use std::{ffi::c_void, iter::once, os::windows::prelude::OsStrExt};
+use std::{iter::once, os::windows::prelude::OsStrExt};
 
 use betterncm_macro::betterncm_native_call;
 use betterncm_plugin_api::*;
-use cef::{CefString, CefV8Value};
+use cef::{CefV8Value};
 use cef_sys::DWORD;
 use druid::{AppLauncher, ExtEventSink, WindowDesc};
-use winapi::um::winnt::LONG;
+
 
 use crate::lyrics_app::{ui_builder, LyricAppData};
 mod lyrics_app;
@@ -39,7 +39,7 @@ fn init_lyrics_app() {
 }
 
 #[betterncm_native_call]
-fn update_lyrics(line: CefV8Value, line_ext: CefV8Value) {
+fn update_lyrics(line: CefV8Value, _line_ext: CefV8Value) {
     if line.is_string() {
         let line = line.get_string_value().to_string();
         unsafe {

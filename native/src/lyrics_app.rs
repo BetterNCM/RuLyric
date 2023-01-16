@@ -1,5 +1,5 @@
-use druid::widget::{Button, Flex, Label};
-use druid::{AppLauncher, LocalizedString, PlatformError, Widget, WidgetExt, WindowDesc, Data};
+use druid::widget::{Flex};
+use druid::{Widget, Data};
 
 use crate::model::lyrics::LyricsData;
 use crate::widgets::lyrics::LyricLineWidget;

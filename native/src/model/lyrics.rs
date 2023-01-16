@@ -30,12 +30,12 @@ impl LyricsData {
                 font_color: druid::Color::WHITE,
             },
             lyric_line_num: unsafe {
-                COUNT_LINE_NUM = COUNT_LINE_NUM + 1;
+                COUNT_LINE_NUM += 1;
                 COUNT_LINE_NUM
             },
             lyric_str: str.to_string(),
             lyrics: str
-                .split("\u{a0}")
+                .split('\u{a0}')
                 .map(|s| LyricsWord {
                     lyric_word: s.to_string(),
                     lyric_duration: 200,
@@ -63,6 +63,6 @@ impl LyricsData {
             time += t.lyric_duration;
             words += 1;
         }
-        return (words, 0.);
+        (words, 0.)
     }
 }
