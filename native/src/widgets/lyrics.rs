@@ -2,17 +2,16 @@ use std::marker::PhantomData;
 
 use druid::{
     piet::{D2DTextLayout, Text, TextAttribute, TextLayout, TextLayoutBuilder},
-    Color, Data, Event, FontWeight, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext,
-    Size, Widget,
+    Color, Data, Event, HasRawWindowHandle, Insets, LifeCycle, Point, RenderContext, Size, Widget,
 };
 
 use raw_window_handle_5::RawWindowHandle;
 
-use crate::model::lyrics::LyricsData;
+use crate::model::{font::FontConfig, lyrics::LyricsData};
 
 const LABEL_INSETS: Insets = Insets::uniform_xy(8., 2.);
 
-pub struct LyricLineWidget<T, F: Fn(&T) -> LyricsData> {
+pub struct LyricLineWidget<T, F: Fn(&T) -> (LyricsData, FontConfig)> {
     a: PhantomData<T>,
     lyric_line: Option<LyricsData>,
     lyric_line_updater: F,
@@ -20,9 +19,10 @@ pub struct LyricLineWidget<T, F: Fn(&T) -> LyricsData> {
     current_time: u64,
     space_width: f64,
     x_movement: f64,
+    font_data: Option<FontConfig>,
 }
 
-impl<T, F: Fn(&T) -> LyricsData> LyricLineWidget<T, F> {
+impl<T, F: Fn(&T) -> (LyricsData, FontConfig)> LyricLineWidget<T, F> {
     pub fn new(updater: F) -> LyricLineWidget<T, F> {
         LyricLineWidget {
             lyric_line: None,
@@ -32,11 +32,12 @@ impl<T, F: Fn(&T) -> LyricsData> LyricLineWidget<T, F> {
             current_time: 0,
             space_width: 0.,
             x_movement: 0.,
+            font_data: None,
         }
     }
 }
 
-impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
+impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidget<T, F> {
     fn event(
         &mut self,
         ctx: &mut druid::EventCtx,
@@ -47,19 +48,18 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
         match event {
             Event::MouseDown(_e) => {}
             Event::MouseMove(_m) => {
-                ctx.window().show_titlebar(false);
                 use winapi::um::winuser::*;
                 unsafe {
                     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
-                        winapi::um::winuser::SetWindowPos(
-                            handle.hwnd as _,
-                            HWND_TOPMOST,
-                            0,
-                            0,
-                            0,
-                            0,
-                            SWP_NOMOVE | SWP_NOSIZE,
-                        );
+                        // winapi::um::winuser::SetWindowPos(
+                        //     handle.hwnd as _,
+                        //     HWND_TOPMOST,
+                        //     0,
+                        //     0,
+                        //     0,
+                        //     0,
+                        //     SWP_NOMOVE | SWP_NOSIZE,
+                        // );
                     }
                 }
 
@@ -103,10 +103,11 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
         if let LifeCycle::HotChanged(_) = event {
             ctx.request_paint();
         }
+        
     }
 
     fn update(&mut self, ctx: &mut druid::UpdateCtx, _old_data: &T, data: &T, _env: &druid::Env) {
-        let new_lyric = (self.lyric_line_updater)(data);
+        let (new_lyric, new_font) = (self.lyric_line_updater)(data);
 
         if let Some(LyricsData {
             start_time,
@@ -124,12 +125,14 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
             self.x_movement = 0.;
         }
 
+        
+
         if self.lyric_line.is_none()
             || self.lyric_line.as_ref().unwrap().lyric_line_num != new_lyric.lyric_line_num
         {
             let t = ctx.text();
 
-            let font = &new_lyric.font;
+            let font = &new_font;
             self.lyric_text_bg = Some(
                 t.new_text_layout(new_lyric.lyric_str.clone())
                     .text_color(druid::Color::rgba(1., 1., 1., 0.3))
@@ -172,6 +175,8 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
             ctx.request_paint();
             ctx.request_layout();
         }
+
+        self.font_data = Some(new_font);
     }
     fn layout(
         &mut self,
@@ -193,7 +198,9 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
     }
 
     fn paint(&mut self, ctx: &mut druid::PaintCtx, _data: &T, _env: &druid::Env) {
-        if let (Some(ref text_bg), Some(ref lyric_line)) = (&self.lyric_text_bg, &self.lyric_line) {
+        if let (Some(ref _text_bg), Some(ref lyric_line), Some(ref font)) =
+            (&self.lyric_text_bg, &self.lyric_line, &self.font_data)
+        {
             let lyrics_origin = Point::new(0. - self.x_movement, 0.);
 
             // ctx.draw_text(text_bg, lyrics_origin);
@@ -205,7 +212,7 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                                  color: Color| {
                 let t = ctx.text();
 
-                let space_x = if word.ends_with(" ") {
+                let space_x = if word.ends_with(' ') {
                     self.space_width
                 } else {
                     0.
@@ -215,11 +222,11 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                     .new_text_layout(word)
                     .text_color(color)
                     .font(
-                        t.font_family(lyric_line.font.font_family.as_str())
+                        t.font_family(font.font_family.as_str())
                             .unwrap_or(druid::FontFamily::SYSTEM_UI),
-                        lyric_line.font.font_size,
+                        font.font_size,
                     )
-                    .default_attribute(TextAttribute::Weight(lyric_line.font.font_weight))
+                    .default_attribute(TextAttribute::Weight(font.font_weight))
                     .build()
                     .unwrap();
 
@@ -276,8 +283,8 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
             };
 
             let mut cur_x = 0.;
-
-            for (index, word) in lyric_line.lyrics.iter().enumerate() {
+            println!("{:#?}", lyric_line);
+            for (_index, word) in lyric_line.lyrics.iter().enumerate() {
                 draw_word(
                     word.lyric_word.clone(),
                     &mut cur_x,
@@ -304,7 +311,7 @@ impl<T: Data, F: Fn(&T) -> LyricsData> Widget<T> for LyricLineWidget<T, F> {
                         current_lyric.1
                     },
                     ctx,
-                    lyric_line.font.font_color,
+                    font.font_color,
                 );
             }
         }

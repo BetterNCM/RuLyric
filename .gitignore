@@ -1,2 +1,5 @@
 native/target
 native/Cargo.lock
+index.js
+node_modules/
+yarn.lock

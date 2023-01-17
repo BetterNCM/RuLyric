@@ -1,4 +1,4 @@
-use druid::{Color, Data, FontWeight, FontFamily};
+use druid::{Color, Data, FontWeight};
 
 #[derive(Clone, Debug, PartialEq,Data)]
 pub struct FontConfig{
