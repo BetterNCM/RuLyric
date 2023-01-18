@@ -49,21 +49,21 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
             Event::MouseDown(_e) => {}
             Event::MouseMove(_m) => {
                 use winapi::um::winuser::*;
-                unsafe {
-                    if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
-                        // winapi::um::winuser::SetWindowPos(
-                        //     handle.hwnd as _,
-                        //     HWND_TOPMOST,
-                        //     0,
-                        //     0,
-                        //     0,
-                        //     0,
-                        //     SWP_NOMOVE | SWP_NOSIZE,
-                        // );
-                    }
-                }
+                // unsafe {
+                //     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
+                //         // winapi::um::winuser::SetWindowPos(
+                //         //     handle.hwnd as _,
+                //         //     HWND_TOPMOST,
+                //         //     0,
+                //         //     0,
+                //         //     0,
+                //         //     0,
+                //         //     SWP_NOMOVE | SWP_NOSIZE,
+                //         // );
+                //     }
+                // }
 
-                ctx.window().handle_titlebar(true);
+                // ctx.window().handle_titlebar(true);
                 // unsafe {
                 //     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
                 // winapi::um::winuser::SetWindowPos(
@@ -82,8 +82,8 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                 if let Some(lyric_line) = &self.lyric_line {
                     if !lyric_line.paused {
                         self.current_time += delta_t / 1000 / 1000;
-                        ctx.request_anim_frame();
                         ctx.request_paint();
+                        ctx.request_anim_frame();
                     }
                 }
             }
@@ -103,7 +103,6 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
         if let LifeCycle::HotChanged(_) = event {
             ctx.request_paint();
         }
-        
     }
 
     fn update(&mut self, ctx: &mut druid::UpdateCtx, _old_data: &T, data: &T, _env: &druid::Env) {
@@ -135,7 +134,6 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
             let font = &new_font;
             self.lyric_text_bg = Some(
                 t.new_text_layout(new_lyric.lyric_str.clone())
-                    .text_color(druid::Color::rgba(1., 1., 1., 0.3))
                     .font(
                         t.font_family(font.font_family.as_str())
                             .unwrap_or(druid::FontFamily::SYSTEM_UI),
@@ -283,14 +281,13 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
             };
 
             let mut cur_x = 0.;
-            println!("{:#?}", lyric_line);
             for (_index, word) in lyric_line.lyrics.iter().enumerate() {
                 draw_word(
                     word.lyric_word.clone(),
                     &mut cur_x,
                     1.,
                     ctx,
-                    Color::rgba8(255, 255, 255, 80),
+                    font.font_background_color,
                 );
             }
 

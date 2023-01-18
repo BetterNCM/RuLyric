@@ -1,8 +1,9 @@
-use druid::widget::Flex;
-use druid::{Data, Widget};
+use druid::widget::{Button, Flex, Label};
+use druid::{Data, Env, EventCtx, Widget};
 
 use crate::model::font::FontConfig;
 use crate::model::lyrics::LyricsData;
+use crate::widgets::glow::Glow;
 use crate::widgets::lyrics::LyricLineWidget;
 
 #[derive(Data, Clone, Debug)]
@@ -21,13 +22,24 @@ pub struct LyricWinData {
 }
 
 pub fn ui_builder(win_num: usize) -> impl Widget<LyricAppData> {
-    let text = LyricLineWidget::new(move|data: &LyricAppData| {
-        (data.current_lyric.clone(), data.win_data[win_num].font.clone())
+    let text = LyricLineWidget::new(move |data: &LyricAppData| {
+        (
+            data.current_lyric.clone(),
+            data.win_data[win_num].font.clone(),
+        )
     });
 
-    let text2 = LyricLineWidget::new(move|data: &LyricAppData| {
-        (data.current_lyric_ext.clone(), data.win_data[win_num].font.clone())
+    let text2 = LyricLineWidget::new(move |data: &LyricAppData| {
+        (
+            data.current_lyric_ext.clone(),
+            data.win_data[win_num].font_secondary.clone(),
+        )
     });
 
-    Flex::column().with_child(text).with_child(text2)
+    Glow::new(
+        Flex::column()
+            .with_child(text)
+            .with_child(text2),
+        win_num,
+    )
 }

@@ -79,5 +79,7 @@ plugin.onLoad(() => {
 
         }, 1000)
     })
-    // betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
+    setTimeout(()=>{
+        betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
+    },100);
 });

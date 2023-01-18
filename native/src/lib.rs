@@ -4,7 +4,12 @@ extern crate lazy_static;
 static mut DATA_SENDER: Option<ExtEventSink> = None;
 pub static mut WIN_HWND: Option<DWORD> = None;
 
-use std::{fs, iter::once, os::windows::prelude::OsStrExt, sync::Arc};
+use std::{
+    fs,
+    iter::{once, Map},
+    os::windows::prelude::OsStrExt,
+    sync::{Arc, Mutex}, ptr::{null, null_mut}, collections::HashMap,
+};
 
 use betterncm_macro::betterncm_native_call;
 use betterncm_plugin_api::*;
@@ -12,8 +17,10 @@ use cef::CefV8Value;
 use cef_sys::DWORD;
 use druid::{
     AppDelegate, AppLauncher, Color, Command, DelegateCtx, Env, ExtEventSink, FontWeight, Handled,
-    Selector, Target, WindowDesc, WindowHandle, WindowId,
+    HasRawWindowHandle, RawWindowHandle, Selector, Target, WindowDesc, WindowHandle, WindowId,
 };
+use raw_window_handle_5::Win32WindowHandle;
+use winapi::um::synchapi::Sleep;
 
 use crate::{
     lyrics_app::{ui_builder, LyricAppData, LyricWinData},
@@ -28,7 +35,9 @@ mod model;
 mod widgets;
 mod win_helper;
 
-struct Delegate {}
+struct Delegate {
+    handles: HashMap<WindowId,WindowHandle>,
+}
 
 impl AppDelegate<LyricAppData> for Delegate {
     fn command(
@@ -40,6 +49,10 @@ impl AppDelegate<LyricAppData> for Delegate {
         _env: &Env,
     ) -> Handled {
         if let Some(winid) = cmd.get(Selector::<usize>::new("CREATE_WINDOW")) {
+            for (key,val) in &self.handles{
+                val.close();
+            }
+
             ctx.new_window(
                 WindowDesc::new(ui_builder(*winid))
                     .show_titlebar(false)
@@ -50,6 +63,21 @@ impl AppDelegate<LyricAppData> for Delegate {
         } else {
             Handled::No
         }
+    }
+
+    fn window_added(
+        &mut self,
+        id: WindowId,
+        handle: WindowHandle,
+        data: &mut LyricAppData,
+        env: &Env,
+        ctx: &mut DelegateCtx,
+    ) {
+        self.handles.insert(id,handle);
+    }
+
+    fn window_removed(&mut self, id: WindowId, data: &mut LyricAppData, env: &Env, ctx: &mut DelegateCtx) {
+        self.handles.remove(&id);
     }
 }
 
@@ -66,12 +94,12 @@ fn init_lyrics_app() {
     if unsafe { DATA_SENDER.is_none() } {
         std::thread::spawn(|| {
             let main_window = WindowDesc::new(ui_builder(0))
-                .show_titlebar(true)
-                .transparent(false)
+                .show_titlebar(false)
+                .transparent(true)
                 .window_size((400.0, 70.0));
 
             let app = AppLauncher::with_window(main_window)
-                .delegate(Delegate {})
+                .delegate(Delegate { handles: HashMap::new() })
                 .log_to_console();
             unsafe {
                 DATA_SENDER = Some(app.get_external_handle());
@@ -83,14 +111,16 @@ fn init_lyrics_app() {
                 win_data: vec![LyricWinData {
                     font: FontConfig {
                         font_family: "Noto Sans SC".to_string(),
-                        font_size: 18.,
+                        font_size: 16.,
                         font_color: druid::Color::WHITE,
                         font_weight: FontWeight::BOLD,
+                        font_background_color: druid::Color::rgba8(255,255,255,80)
                     },
                     font_secondary: FontConfig {
                         font_family: "Noto Sans SC".to_string(),
-                        font_size: 16.,
-                        font_color: druid::Color::WHITE,
+                        font_size: 14.,
+                        font_color: druid::Color::rgba8(255,255,255,30),
+                        font_background_color: druid::Color::rgba8(255,255,255,80),
                         font_weight: FontWeight::NORMAL,
                     },
                     with_words_lyrics: false,
@@ -102,14 +132,16 @@ fn init_lyrics_app() {
             data.win_data.push(LyricWinData {
                 font: FontConfig {
                     font_family: "Noto Sans SC".to_string(),
-                    font_size: 18.,
+                    font_size: 16.,
                     font_color: druid::Color::WHITE,
                     font_weight: FontWeight::BOLD,
+                    font_background_color: druid::Color::rgba8(255,255,255,80)
                 },
                 font_secondary: FontConfig {
                     font_family: "Noto Sans SC".to_string(),
-                    font_size: 16.,
-                    font_color: druid::Color::WHITE,
+                    font_size: 14.,
+                    font_color: druid::Color::rgba8(255,255,255,30),
+                    font_background_color: druid::Color::rgba8(255,255,255,80),
                     font_weight: FontWeight::NORMAL,
                 },
                 with_words_lyrics: false,
