@@ -12,7 +12,7 @@
             "file": "index.js"
         }]
     },
-    "loadAfter":['libsonginfo'],
-    "requirements": ['libsonginfo'],
+    "loadAfter":["libsonginfo"],
+    "requirements": ["libsonginfo"],
     "native_plugin":"RuLyrics.dll"
 }
