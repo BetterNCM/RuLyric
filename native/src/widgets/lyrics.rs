@@ -49,34 +49,22 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
             Event::MouseDown(_e) => {}
             Event::MouseMove(_m) => {
                 use winapi::um::winuser::*;
-                // unsafe {
-                //     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
-                //         // winapi::um::winuser::SetWindowPos(
-                //         //     handle.hwnd as _,
-                //         //     HWND_TOPMOST,
-                //         //     0,
-                //         //     0,
-                //         //     0,
-                //         //     0,
-                //         //     SWP_NOMOVE | SWP_NOSIZE,
-                //         // );
-                //     }
-                // }
+                unsafe {
+                    if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
+                        winapi::um::winuser::SetWindowPos(
+                            handle.hwnd as _,
+                            HWND_TOPMOST,
+                            0,
+                            0,
+                            0,
+                            0,
+                            SWP_NOMOVE | SWP_NOSIZE,
+                        );
+                    }
+                }
 
-                // ctx.window().handle_titlebar(true);
-                // unsafe {
-                //     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
-                // winapi::um::winuser::SetWindowPos(
-                //     handle.hwnd as _,
-                //     HWND_TOPMOST,
-                //     0,
-                //     0,
-                //     0,
-                //     0,
-                //     SWP_NOMOVE | SWP_NOSIZE,
-                // );
-                //     }
-                // }
+                
+                
             }
             Event::AnimFrame(delta_t) => {
                 if let Some(lyric_line) = &self.lyric_line {

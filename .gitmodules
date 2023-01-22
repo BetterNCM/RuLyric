@@ -1,3 +1,6 @@
 [submodule "native/betterncm-native-plugin-rs"]
 	path = native/betterncm-native-plugin-rs
 	url = https://github.com/BetterNCM/betterncm-native-plugin-rs
+[submodule "js-framework"]
+	path = js-framework
+	url = https://github.com/BetterNCM/js-framework

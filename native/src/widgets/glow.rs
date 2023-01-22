@@ -5,8 +5,10 @@ use druid::widget::{
 use druid::Target::Global;
 use druid::{
     commands as sys_cmds, AppDelegate, AppLauncher, Application, Color, Command, Data, DelegateCtx,
-    Handled, LocalizedString, Menu, MenuItem, Target, WindowDesc, WindowHandle, WindowId,
+    Handled, HasRawWindowHandle, LocalizedString, Menu, MenuItem, RawWindowHandle, Target,
+    WindowDesc, WindowHandle, WindowId,
 };
+use winapi::um::winuser::{HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE};
 
 use crate::lyrics_app::LyricAppData;
 
@@ -23,7 +25,22 @@ impl<W> Glow<W> {
 
 impl<W: Widget<LyricAppData>> Widget<LyricAppData> for Glow<W> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut LyricAppData, env: &Env) {
-        ctx.window().handle_titlebar(true);
+        if let Event::MouseMove(_) = event {
+            ctx.window().handle_titlebar(true);
+            // unsafe {
+            //     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
+            //         winapi::um::winuser::SetWindowPos(
+            //             handle.hwnd as _,
+            //             HWND_TOPMOST,
+            //             0,
+            //             0,
+            //             0,
+            //             0,
+            //             SWP_NOMOVE | SWP_NOSIZE,
+            //         );
+            //     }
+            // }
+        }
 
         self.inner.event(ctx, event, data, env);
     }

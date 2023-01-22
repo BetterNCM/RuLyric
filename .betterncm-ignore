@@ -1,2 +1,8 @@
 /native/
 *.ps1
+build.js
+.vscode
+.git
+rome.json
+package.json
+tsconfig.json

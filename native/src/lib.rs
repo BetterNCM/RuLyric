@@ -5,10 +5,12 @@ static mut DATA_SENDER: Option<ExtEventSink> = None;
 pub static mut WIN_HWND: Option<DWORD> = None;
 
 use std::{
+    collections::HashMap,
     fs,
     iter::{once, Map},
     os::windows::prelude::OsStrExt,
-    sync::{Arc, Mutex}, ptr::{null, null_mut}, collections::HashMap,
+    ptr::{null, null_mut},
+    sync::{Arc, Mutex},
 };
 
 use betterncm_macro::betterncm_native_call;
@@ -36,7 +38,7 @@ mod widgets;
 mod win_helper;
 
 struct Delegate {
-    handles: HashMap<WindowId,WindowHandle>,
+    handles: HashMap<WindowId, WindowHandle>,
 }
 
 impl AppDelegate<LyricAppData> for Delegate {
@@ -49,7 +51,7 @@ impl AppDelegate<LyricAppData> for Delegate {
         _env: &Env,
     ) -> Handled {
         if let Some(winid) = cmd.get(Selector::<usize>::new("CREATE_WINDOW")) {
-            for (key,val) in &self.handles{
+            for (key, val) in &self.handles {
                 val.close();
             }
 
@@ -73,10 +75,16 @@ impl AppDelegate<LyricAppData> for Delegate {
         env: &Env,
         ctx: &mut DelegateCtx,
     ) {
-        self.handles.insert(id,handle);
+        self.handles.insert(id, handle);
     }
 
-    fn window_removed(&mut self, id: WindowId, data: &mut LyricAppData, env: &Env, ctx: &mut DelegateCtx) {
+    fn window_removed(
+        &mut self,
+        id: WindowId,
+        data: &mut LyricAppData,
+        env: &Env,
+        ctx: &mut DelegateCtx,
+    ) {
         self.handles.remove(&id);
     }
 }
@@ -89,8 +97,64 @@ fn edit_data(callback: impl FnOnce(&mut LyricAppData) + Send + std::marker::Sync
     }
 }
 
+
 #[betterncm_native_call]
-fn init_lyrics_app() {
+fn init_lyrics_app(
+    font_family: CefV8Value,
+    font_size: CefV8Value,
+    font_color: CefV8Value,
+    font_weight: CefV8Value,
+    font_background_color: CefV8Value,
+
+    font_family_s: CefV8Value,
+    font_size_s: CefV8Value,
+    font_color_s: CefV8Value,
+    font_weight_s: CefV8Value,
+    font_background_color_s: CefV8Value,
+) {
+    fn get_font_conf_from_v8(
+        font_family: CefV8Value,
+        font_size: CefV8Value,
+        font_color: CefV8Value,
+        font_weight: CefV8Value,
+        font_background_color: CefV8Value,
+    ) -> FontConfig {
+        FontConfig {
+            font_family: font_family.get_string_value().to_string(),
+            font_size: font_size.get_double_value(),
+            font_color: druid::Color::from_hex_str(
+                font_color.get_string_value().to_string().as_str(),
+            )
+            .unwrap(),
+            font_weight: FontWeight::new(font_weight.get_uint_value() as u16),
+            font_background_color: druid::Color::from_hex_str(
+                font_background_color
+                    .get_string_value()
+                    .to_string()
+                    .as_str(),
+            )
+            .unwrap(),
+        }
+    }
+
+    let win_data=LyricWinData {
+        font: get_font_conf_from_v8(
+            font_family,
+            font_size,
+            font_color,
+            font_weight,
+            font_background_color,
+        ),
+        font_secondary: get_font_conf_from_v8(
+            font_family_s,
+            font_size_s,
+            font_color_s,
+            font_weight_s,
+            font_background_color_s,
+        ),
+        with_words_lyrics: false,
+    };
+
     if unsafe { DATA_SENDER.is_none() } {
         std::thread::spawn(|| {
             let main_window = WindowDesc::new(ui_builder(0))
@@ -99,7 +163,9 @@ fn init_lyrics_app() {
                 .window_size((400.0, 70.0));
 
             let app = AppLauncher::with_window(main_window)
-                .delegate(Delegate { handles: HashMap::new() })
+                .delegate(Delegate {
+                    handles: HashMap::new(),
+                })
                 .log_to_console();
             unsafe {
                 DATA_SENDER = Some(app.get_external_handle());
@@ -108,49 +174,17 @@ fn init_lyrics_app() {
             app.launch(LyricAppData {
                 current_lyric: LyricsData::new_test("".to_string()),
                 current_lyric_ext: LyricsData::new_test("".to_string()),
-                win_data: vec![LyricWinData {
-                    font: FontConfig {
-                        font_family: "Noto Sans SC".to_string(),
-                        font_size: 16.,
-                        font_color: druid::Color::WHITE,
-                        font_weight: FontWeight::BOLD,
-                        font_background_color: druid::Color::rgba8(255,255,255,80)
-                    },
-                    font_secondary: FontConfig {
-                        font_family: "Noto Sans SC".to_string(),
-                        font_size: 14.,
-                        font_color: druid::Color::rgba8(255,255,255,30),
-                        font_background_color: druid::Color::rgba8(255,255,255,80),
-                        font_weight: FontWeight::NORMAL,
-                    },
-                    with_words_lyrics: false,
-                }],
+                win_data: vec![win_data],
             })
         });
     } else {
-        edit_data(|data| unsafe {
-            data.win_data.push(LyricWinData {
-                font: FontConfig {
-                    font_family: "Noto Sans SC".to_string(),
-                    font_size: 16.,
-                    font_color: druid::Color::WHITE,
-                    font_weight: FontWeight::BOLD,
-                    font_background_color: druid::Color::rgba8(255,255,255,80)
-                },
-                font_secondary: FontConfig {
-                    font_family: "Noto Sans SC".to_string(),
-                    font_size: 14.,
-                    font_color: druid::Color::rgba8(255,255,255,30),
-                    font_background_color: druid::Color::rgba8(255,255,255,80),
-                    font_weight: FontWeight::NORMAL,
-                },
-                with_words_lyrics: false,
-            });
-            let _ = DATA_SENDER.as_ref().unwrap().submit_command(
-                Selector::new("CREATE_WINDOW"),
-                data.win_data.len() - 1,
-                Target::Global,
-            );
+        edit_data(|data|  {
+            data.win_data[0]=win_data;
+            // let _ = DATA_SENDER.as_ref().unwrap().submit_command(
+            //     Selector::new("CREATE_WINDOW"),
+            //     data.win_data.len() - 1,
+            //     Target::Global,
+            // );
         });
     }
 }
@@ -245,7 +279,7 @@ extern "cdecl" fn betterncm_plugin_main(ctx: &mut PluginContext) -> ::core::ffi:
 
         ctx.add_native_api_raw(
             FULL_V8VALUE_ARGS.as_ptr(),
-            0,
+            10,
             "rulyrics.init_lyrics_app\0".as_ptr() as _,
             init_lyrics_app,
         );
