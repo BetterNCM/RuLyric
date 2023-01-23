@@ -265,7 +265,7 @@ function MainMenu() {
                     <FormGroup>
                         <FormControlLabel
                             control={
-                                <Switch defaultChecked={taskbar} onChange={(_, c) => setTaskbar(c)} />
+                                <Switch checked={taskbar} onChange={() => setTaskbar(c=>!c)} />
                             }
                             label="嵌入到任务栏 （可能需要重启网易云）"
                         />

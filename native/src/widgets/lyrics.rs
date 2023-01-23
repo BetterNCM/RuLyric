@@ -128,6 +128,7 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                         font.font_size,
                     )
                     .default_attribute(TextAttribute::Weight(font.font_weight))
+                    .text_color(font.font_background_color)
                     .build()
                     .unwrap(),
             );
@@ -184,12 +185,12 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
     }
 
     fn paint(&mut self, ctx: &mut druid::PaintCtx, _data: &T, _env: &druid::Env) {
-        if let (Some(ref _text_bg), Some(ref lyric_line), Some(ref font)) =
+        if let (Some(ref text_bg), Some(ref lyric_line), Some(ref font)) =
             (&self.lyric_text_bg, &self.lyric_line, &self.font_data)
         {
             let lyrics_origin = Point::new(0. - self.x_movement, 0.);
 
-            // ctx.draw_text(text_bg, lyrics_origin);
+            ctx.draw_text(text_bg, lyrics_origin);
 
             let mut draw_word = |word: String,
                                  cur_x: &mut f64,
@@ -268,16 +269,16 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                 *cur_x += size.width + space_x;
             };
 
-            let mut cur_x = 0.;
-            for (_index, word) in lyric_line.lyrics.iter().enumerate() {
-                draw_word(
-                    word.lyric_word.clone(),
-                    &mut cur_x,
-                    1.,
-                    ctx,
-                    font.font_background_color,
-                );
-            }
+            // let mut cur_x = 0.;
+            // for (_index, word) in lyric_line.lyrics.iter().enumerate() {
+            //     draw_word(
+            //         word.lyric_word.clone(),
+            //         &mut cur_x,
+            //         1.,
+            //         ctx,
+            //         font.font_background_color,
+            //     );
+            // }
 
             let current_lyric = lyric_line.get_per_word_lyrics_time(self.current_time);
             let mut cur_x = 0.;
