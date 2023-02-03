@@ -97,7 +97,6 @@ fn edit_data(callback: impl FnOnce(&mut LyricAppData) + Send + std::marker::Sync
     }
 }
 
-
 #[betterncm_native_call]
 fn init_lyrics_app(
     font_family: CefV8Value,
@@ -137,7 +136,7 @@ fn init_lyrics_app(
         }
     }
 
-    let win_data=LyricWinData {
+    let win_data = LyricWinData {
         font: get_font_conf_from_v8(
             font_family,
             font_size,
@@ -178,8 +177,8 @@ fn init_lyrics_app(
             })
         });
     } else {
-        edit_data(|data|  {
-            data.win_data[0]=win_data;
+        edit_data(|data| {
+            data.win_data[0] = win_data;
             // let _ = DATA_SENDER.as_ref().unwrap().submit_command(
             //     Selector::new("CREATE_WINDOW"),
             //     data.win_data.len() - 1,
@@ -195,6 +194,7 @@ fn update_lyrics(line: CefV8Value, line_ext: CefV8Value) {
         let line = line.get_string_value().to_string();
         edit_data(move |data: &mut LyricAppData| {
             data.current_lyric = LyricsData::new_test(line);
+            data.current_lyric_ext = LyricsData::new_test("".to_string());
         });
     } else if line.is_object() {
         let line_num = line.get_value_byindex(1).get_uint_value();
