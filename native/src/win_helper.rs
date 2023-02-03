@@ -42,7 +42,7 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
     SetWindowLongA(
         druidwin,
         GWL_EXSTYLE,
-        lExStyle | WS_EX_NOACTIVATE | WS_EX_LAYERED as i32,
+        (lExStyle as u32 | WS_EX_NOACTIVATE | WS_EX_LAYERED) as i32,
     );
     winapi::um::winuser::SetParent(druidwin, traywin as _);
 
