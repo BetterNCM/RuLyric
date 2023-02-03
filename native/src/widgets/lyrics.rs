@@ -99,14 +99,18 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
         if let Some(LyricsData {
             start_time,
             lyric_line_num,
+            paused,
             ..
-        }) = &self.lyric_line
+        }) = &mut self.lyric_line
         {
             // Update lyric time
             if *start_time != new_lyric.start_time || *lyric_line_num != new_lyric.lyric_line_num {
                 self.current_time = new_lyric.start_time;
                 self.x_movement = 0.;
             }
+
+            // Update paused
+            *paused=new_lyric.paused;
         } else {
             self.current_time = new_lyric.start_time;
             self.x_movement = 0.;

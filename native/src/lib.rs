@@ -189,7 +189,22 @@ fn init_lyrics_app(
 }
 
 #[betterncm_native_call]
-fn update_lyrics(line: CefV8Value, line_ext: CefV8Value) {
+fn update_lyrics(line: CefV8Value, line_ext: CefV8Value, seek: CefV8Value) {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn get_epoch_ms() -> u128 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+    }
+
+    let seek: i128 = if seek.is_double() {
+        unsafe { seek.get_double_value().to_int_unchecked() }
+    } else {
+        0
+    };
+
     if line.is_string() {
         let line = line.get_string_value().to_string();
         edit_data(move |data: &mut LyricAppData| {
@@ -212,15 +227,19 @@ fn update_lyrics(line: CefV8Value, line_ext: CefV8Value) {
             let line_ext = line_ext.get_string_value().to_string();
             edit_data(move |data: &mut LyricAppData| {
                 data.current_lyric = LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
-
                 data.current_lyric_ext = LyricsData::from_text_duration(
                     line_ext,
                     data.current_lyric.get_full_duration(),
                 );
+
+                data.current_lyric.start_time = seek as u64;
+                data.current_lyric_ext.start_time = seek as u64;
             });
         } else {
             edit_data(move |data: &mut LyricAppData| {
                 data.current_lyric = LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
+
+                data.current_lyric.start_time = seek as u64;
             });
         }
     }
@@ -258,10 +277,15 @@ fn embed_into_any(class_name: CefV8Value) {
 #[betterncm_native_call]
 fn seek(time: CefV8Value, paused: CefV8Value) {
     let time = time.get_uint_value() as u64;
+
     let paused = paused.get_bool_value();
     edit_data(move |data: &mut LyricAppData| {
-        data.current_lyric.start_time = time;
+        if time != 0 {
+            data.current_lyric.start_time = time;
+            data.current_lyric_ext.start_time = time;
+        }
         data.current_lyric.paused = paused;
+        data.current_lyric_ext.paused = paused;
     });
 }
 
@@ -272,7 +296,7 @@ extern "cdecl" fn betterncm_plugin_main(ctx: &mut PluginContext) -> ::core::ffi:
     unsafe {
         ctx.add_native_api_raw(
             FULL_V8VALUE_ARGS.as_ptr(),
-            2,
+            3,
             "rulyrics.update_lyrics\0".as_ptr() as _,
             update_lyrics,
         );

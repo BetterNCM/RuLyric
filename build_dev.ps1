@@ -1,6 +1,7 @@
 $env:LIBCLANG_PATH = 'J:\Program Files (x86)\LLVM\bin\'
 Set-Location native;
 Try {
+    yarn run build;
     cargo build;
     taskkill.exe /f /im cloudmusic.exe
     Start-Sleep 1
