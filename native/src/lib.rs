@@ -240,6 +240,7 @@ fn update_lyrics(line: CefV8Value, line_ext: CefV8Value, seek: CefV8Value) {
                 data.current_lyric = LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
 
                 data.current_lyric.start_time = seek as u64;
+                data.current_lyric_ext = LyricsData::new_test("".to_string());
             });
         }
     }

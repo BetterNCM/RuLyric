@@ -174,7 +174,7 @@ function MainMenu() {
                 0,
                 state === 2]);
         });
-        
+
         legacyNativeCmder.appendRegisterCall(
             "PlayProgress",
             "audioplayer",
@@ -281,7 +281,7 @@ function MainMenu() {
                     <FormGroup>
                         <FormControlLabel
                             control={
-                                <Switch checked={taskbar} onChange={() => setTaskbar(c => !c)} />
+                                <Switch checked={taskbar} onChange={(_, c) => setTaskbar(c)} />
                             }
                             label="嵌入到任务栏 （可能需要重启网易云）"
                         />
