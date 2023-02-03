@@ -73,7 +73,13 @@ function MainMenu() {
 
     React.useEffect(() => {
         if (taskbar) {
-            betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
+            setTimeout(() => {
+                betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
+            }, 500);
+        }else{
+            setTimeout(() => {
+                betterncm_native.native_plugin.call('rulyrics.embed_into_any', ['']);
+            }, 500);
         }
     }, [taskbar]);
 
@@ -232,7 +238,7 @@ function MainMenu() {
         if (taskbar) {
             setTimeout(() => {
                 betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
-            }, 100);
+            }, 500);
         }
     }
 

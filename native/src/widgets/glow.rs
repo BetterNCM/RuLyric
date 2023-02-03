@@ -25,21 +25,16 @@ impl<W> Glow<W> {
 
 impl<W: Widget<LyricAppData>> Widget<LyricAppData> for Glow<W> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut LyricAppData, env: &Env) {
+        if let Event::WindowConnected = event{
+            unsafe {
+                if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
+                    crate::WIN_HWND = Some(handle.hwnd as _);
+                }
+            }
+        }
+
         if let Event::MouseMove(_) = event {
             ctx.window().handle_titlebar(true);
-            // unsafe {
-            //     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
-            //         winapi::um::winuser::SetWindowPos(
-            //             handle.hwnd as _,
-            //             HWND_TOPMOST,
-            //             0,
-            //             0,
-            //             0,
-            //             0,
-            //             SWP_NOMOVE | SWP_NOSIZE,
-            //         );
-            //     }
-            // }
         }
 
         self.inner.event(ctx, event, data, env);

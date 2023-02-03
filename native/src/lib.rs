@@ -75,6 +75,11 @@ impl AppDelegate<LyricAppData> for Delegate {
         env: &Env,
         ctx: &mut DelegateCtx,
     ) {
+        unsafe {
+            if let RawWindowHandle::Win32(handle) = handle.raw_window_handle() {
+                crate::WIN_HWND = Some(handle.hwnd as _);
+            }
+        }
         self.handles.insert(id, handle);
     }
 
@@ -274,6 +279,7 @@ fn embed_into_with_classname(class_name: &String) {
 fn embed_into_any(class_name: CefV8Value) {
     embed_into_with_classname(&class_name.get_string_value().to_string());
 }
+
 
 #[betterncm_native_call]
 fn seek(time: CefV8Value, paused: CefV8Value) {

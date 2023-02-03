@@ -25,11 +25,7 @@ pub unsafe fn get_desktop_hwnd() -> *const i8 {
 }
 
 pub unsafe fn embed_into_hwnd(traywin: *const i8) {
-    let wide: Vec<u16> = std::ffi::OsStr::new("druid")
-        .encode_wide()
-        .chain(once(0))
-        .collect();
-    let druidwin = winapi::um::winuser::FindWindowW(wide.as_ptr(), null_mut());
+    let druidwin = crate::WIN_HWND.unwrap() as _;
 
     use winapi::um::winuser::*;
 
