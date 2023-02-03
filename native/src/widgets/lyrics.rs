@@ -62,9 +62,6 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                         );
                     }
                 }
-
-                
-                
             }
             Event::AnimFrame(delta_t) => {
                 if let Some(lyric_line) = &self.lyric_line {
@@ -106,17 +103,13 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
             // Update lyric time
             if *start_time != new_lyric.start_time || *lyric_line_num != new_lyric.lyric_line_num {
                 self.current_time = new_lyric.start_time;
-                self.x_movement = 0.;
             }
 
             // Update paused
-            *paused=new_lyric.paused;
+            *paused = new_lyric.paused;
         } else {
             self.current_time = new_lyric.start_time;
-            self.x_movement = 0.;
         }
-
-        
 
         if self.lyric_line.is_none()
             || self.lyric_line.as_ref().unwrap().lyric_line_num != new_lyric.lyric_line_num
@@ -192,15 +185,13 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
         if let (Some(ref text_bg), Some(ref lyric_line), Some(ref font)) =
             (&self.lyric_text_bg, &self.lyric_line, &self.font_data)
         {
-            let lyrics_origin = Point::new(0. - self.x_movement, 0.);
-
-            ctx.draw_text(text_bg, lyrics_origin);
-
+            let mut x_mv = self.x_movement;
             let mut draw_word = |word: String,
                                  cur_x: &mut f64,
                                  complete: f64,
                                  ctx: &mut druid::PaintCtx,
                                  color: Color| {
+                let lyrics_origin = Point::new(0. - self.x_movement, 0.);
                 let t = ctx.text();
 
                 let space_x = if word.ends_with(' ') {
@@ -255,7 +246,7 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                     self.x_movement = {
                         let mv = cur_width + winw / 2. - winw;
                         let maxmv = self.lyric_text_bg.as_ref().unwrap().size().width - winw;
-                        max!(min!(mv, maxmv), 0.)
+                        max!(min!(mv, maxmv), 1.)
                     };
 
                     ctx.save().unwrap();
@@ -271,21 +262,28 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                 }
 
                 *cur_x += size.width + space_x;
+
+                (self.x_movement, 0)
             };
-
-            // let mut cur_x = 0.;
-            // for (_index, word) in lyric_line.lyrics.iter().enumerate() {
-            //     draw_word(
-            //         word.lyric_word.clone(),
-            //         &mut cur_x,
-            //         1.,
-            //         ctx,
-            //         font.font_background_color,
-            //     );
-            // }
-
             let current_lyric = lyric_line.get_per_word_lyrics_time(self.current_time);
             let mut cur_x = 0.;
+
+            let lyrics_origin = Point::new(0. - x_mv, 0.);
+
+            if false {
+                let mut cur_x = 0.;
+                for (_index, word) in lyric_line.lyrics.iter().enumerate() {
+                    draw_word(
+                        word.lyric_word.clone(),
+                        &mut cur_x,
+                        1.,
+                        ctx,
+                        font.font_background_color,
+                    );
+                }
+            } else {
+                ctx.draw_text(text_bg, lyrics_origin);
+            }
 
             for (index, word) in lyric_line.lyrics.iter().enumerate() {
                 if index > current_lyric.0 {
