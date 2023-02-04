@@ -32,7 +32,7 @@ jobs:
         version: "10"
         cached: ${{ steps.cache-llvm.outputs.cache-hit }}
     - name: Install nightly
-      run: rustup install nightly-x86_64-pc-windows-msvc
+      run: rustup install nightly-x86_64-pc-windows-msvc; rustup component add rust-src --toolchain nightly-x86_64-pc-windows-msvc
     - name: Build
       run: ./build.ps1
       env:
