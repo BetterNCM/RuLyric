@@ -16,8 +16,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Cache LLVM and Clang
+      id: cache-llvm
+      uses: actions/cache@v2
+      with:
+        path: |
+          C:/Program Files/LLVM
+          ./llvm
+        key: llvm-3.5
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v1
+      with:
+        version: "10"
+        cached: ${{ steps.cache-llvm.outputs.cache-hit }}
     - name: Build
       run: ./build.ps1
+      env:
+          LIBLLVM_PATH: ${{ steps.cache-llvm.outputs.cache-hit }}
     - name: Update native plugin
       uses: test-room-7/action-update-file@v1
       with:
