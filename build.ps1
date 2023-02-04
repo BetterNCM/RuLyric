@@ -1,4 +1,4 @@
-
+$env:LIBCLANG_PATH = 'J:\Program Files\LLVM\bin\'
 yarn
 yarn run build
 Set-Location native;
