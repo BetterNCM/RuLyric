@@ -154,7 +154,7 @@ function MainMenu() {
 
             try {
                 const lrc = await loadedPlugins.liblyric.getLyricData(playing.data.id);
-                const parsed = loadedPlugins.liblyric.parseLyric(lrc.lrc?.lyric, lrc.tlyric?.lyric, lrc.romalrc?.lyric, lrc.yrc?.lyric)
+                const parsed = loadedPlugins.liblyric.parseLyric(lrc.lrc?.lyric, lrc.ytlyric?.lyric ?? lrc.tlyric?.lyric, lrc.romalrc?.lyric, lrc.yrc?.lyric)
                 setCurrentLyrics(parsed)
             }
             catch (e) {
