@@ -1,5 +1,5 @@
 use druid::widget::{Button, Flex, Label};
-use druid::{Data, Env, EventCtx, Widget};
+use druid::{Data, Env, EventCtx, Widget, WidgetExt};
 
 use crate::model::font::FontConfig;
 use crate::model::lyrics::LyricsData;
@@ -39,7 +39,9 @@ pub fn ui_builder(win_num: usize) -> impl Widget<LyricAppData> {
     Glow::new(
         Flex::column()
             .with_child(text)
-            .with_child(text2),
+            .with_child(text2)
+            .align_vertical(druid::UnitPoint::CENTER)
+            ,
         win_num,
     )
 }

@@ -170,6 +170,13 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
         _env: &druid::Env,
     ) -> druid::Size {
         if let Some(text) = &self.lyric_text_bg {
+            if let Some(line) = &self.lyric_line {
+                if line.lyric_str.len()==0{
+                    println!("Empty!");
+                    return Size::new(0., 0.);
+                }
+            }
+
             let mut size = text.size();
             let winw = ctx.window().get_size().width;
             if winw < size.width {

@@ -232,10 +232,15 @@ fn update_lyrics(line: CefV8Value, line_ext: CefV8Value, seek: CefV8Value) {
             let line_ext = line_ext.get_string_value().to_string();
             edit_data(move |data: &mut LyricAppData| {
                 data.current_lyric = LyricsData::from_lyrics(lyrics, line_num.try_into().unwrap());
-                data.current_lyric_ext = LyricsData::from_text_duration(
-                    line_ext,
-                    data.current_lyric.get_full_duration(),
-                );
+
+                if line_ext.len() > 0 {
+                    data.current_lyric_ext = LyricsData::from_text_duration(
+                        line_ext,
+                        data.current_lyric.get_full_duration(),
+                    );
+                } else {
+                    data.current_lyric_ext = LyricsData::new_test("".to_string());
+                }
 
                 data.current_lyric.start_time = seek as u64;
                 data.current_lyric_ext.start_time = seek as u64;
@@ -279,7 +284,6 @@ fn embed_into_with_classname(class_name: &String) {
 fn embed_into_any(class_name: CefV8Value) {
     embed_into_with_classname(&class_name.get_string_value().to_string());
 }
-
 
 #[betterncm_native_call]
 fn seek(time: CefV8Value, paused: CefV8Value) {
