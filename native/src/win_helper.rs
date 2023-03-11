@@ -8,6 +8,8 @@ use winapi::shared::ntdef::LONG;
 use winapi::shared::windef::HWND;
 use winapi::um::winuser::{EnumWindows, FindWindowExA, GetWindowLongA};
 
+use crate::WIN_SIZE;
+
 pub unsafe fn get_desktop_hwnd() -> *const i8 {
     let mut hDeskTop = FindWindowExA(0 as _, 0 as _, "WorkerW".as_ptr() as *const i8, 0 as _);
     let mut hShellDll;
@@ -42,12 +44,25 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
     );
     winapi::um::winuser::SetParent(druidwin, traywin as _);
 
+    // get the position of traywin
+    let mut rect = std::mem::zeroed();
+    GetWindowRect(traywin as _, &mut rect);
+
+    // print rect
+    println!(
+        "rect: {:?} {} {} {}",
+        WIN_SIZE.0.x as i32 - rect.left,
+        WIN_SIZE.0.y as i32 - rect.top,
+        WIN_SIZE.1.width as i32,
+        WIN_SIZE.1.height as i32
+    );
+
     winapi::um::winuser::MoveWindow(
         druidwin,
-        20,
-        1,
-        400,
-        43,
-        (SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
+        WIN_SIZE.0.x as i32 - rect.left,
+        WIN_SIZE.0.y as i32 - rect.top,
+        WIN_SIZE.1.width as _,
+        WIN_SIZE.1.height as _,
+        (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
     );
 }

@@ -41,6 +41,26 @@ struct Delegate {
     handles: HashMap<WindowId, WindowHandle>,
 }
 
+lazy_static! {
+    pub static ref WIN_SIZE: (druid::Point,druid::Size) = {
+        // attempt to read from %AppData%/.betterncm.rulyrics.lastpos.conf
+        let path = format!(
+            "{}\\.betterncm.rulyrics.lastpos.conf",
+            std::env::var("APPDATA").unwrap()
+        );
+        if let Ok(content) = fs::read_to_string(path) {
+            let mut iter = content.split_whitespace();
+            let x = iter.next().unwrap().parse::<f64>().unwrap();
+            let y = iter.next().unwrap().parse::<f64>().unwrap();
+            let w = iter.next().unwrap().parse::<f64>().unwrap();
+            let h = iter.next().unwrap().parse::<f64>().unwrap();
+            (druid::Point::new(x, y), druid::Size::new(w, h))
+        } else {
+            (druid::Point::new(0.0, 0.0), druid::Size::new(400.0, 70.0))
+        }
+    };
+}
+
 impl AppDelegate<LyricAppData> for Delegate {
     fn command(
         &mut self,
@@ -59,7 +79,8 @@ impl AppDelegate<LyricAppData> for Delegate {
                 WindowDesc::new(ui_builder(*winid))
                     .show_titlebar(false)
                     .transparent(true)
-                    .window_size((400.0, 70.0)),
+                    .set_position(WIN_SIZE.0)
+                    .window_size(WIN_SIZE.1),
             );
             Handled::Yes
         } else {
@@ -164,7 +185,8 @@ fn init_lyrics_app(
             let main_window = WindowDesc::new(ui_builder(0))
                 .show_titlebar(false)
                 .transparent(true)
-                .window_size((400.0, 70.0));
+                .set_position(WIN_SIZE.0)
+                .window_size(WIN_SIZE.1);
 
             let app = AppLauncher::with_window(main_window)
                 .delegate(Delegate {

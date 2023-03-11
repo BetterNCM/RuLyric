@@ -25,16 +25,38 @@ impl<W> Glow<W> {
 
 impl<W: Widget<LyricAppData>> Widget<LyricAppData> for Glow<W> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut LyricAppData, env: &Env) {
-        if let Event::WindowConnected = event{
+        if let Event::WindowConnected = event {
             unsafe {
                 if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
                     crate::WIN_HWND = Some(handle.hwnd as _);
                 }
             }
+
+            ctx.request_timer(std::time::Duration::from_secs(3));
         }
 
         if let Event::MouseMove(_) = event {
             ctx.window().handle_titlebar(true);
+        }
+
+        if let Event::Timer(_) = event {
+            ctx.request_timer(std::time::Duration::from_secs(3));
+            
+            use std::fs::write;
+            let pos = ctx.window().get_position();
+            let size = ctx.window().get_size();
+            
+            // save pos to %AppData%/.betterncm.rulyrics.lastpos.conf
+            println!(
+                "{:#?}",
+                write(
+                    format!(
+                        "{}\\.betterncm.rulyrics.lastpos.conf",
+                        std::env::var("APPDATA").unwrap()
+                    ),
+                    format!("{} {} {} {}", pos.x, pos.y, size.width, size.height),
+                )
+            );
         }
 
         self.inner.event(ctx, event, data, env);

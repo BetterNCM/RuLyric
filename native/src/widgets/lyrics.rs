@@ -46,8 +46,7 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
         _env: &druid::Env,
     ) {
         match event {
-            Event::MouseDown(_e) => {}
-            Event::MouseMove(_m) => {
+            Event::MouseDown(_e) => {
                 use winapi::um::winuser::*;
                 unsafe {
                     if let RawWindowHandle::Win32(handle) = ctx.window().raw_window_handle() {
@@ -62,6 +61,9 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
                         );
                     }
                 }
+            }
+            Event::MouseMove(_m) => {
+                
             }
             Event::AnimFrame(delta_t) => {
                 if let Some(lyric_line) = &self.lyric_line {
@@ -172,7 +174,6 @@ impl<T: Data, F: Fn(&T) -> (LyricsData, FontConfig)> Widget<T> for LyricLineWidg
         if let Some(text) = &self.lyric_text_bg {
             if let Some(line) = &self.lyric_line {
                 if line.lyric_str.len()==0{
-                    println!("Empty!");
                     return Size::new(0., 0.);
                 }
             }
