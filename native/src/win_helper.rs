@@ -57,12 +57,28 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
         WIN_SIZE.1.height as i32
     );
 
-    winapi::um::winuser::MoveWindow(
-        druidwin,
-        WIN_SIZE.0.x as i32 - rect.left,
-        WIN_SIZE.0.y as i32 - rect.top,
-        WIN_SIZE.1.width as _,
-        WIN_SIZE.1.height as _,
-        (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
-    );
+    if WIN_SIZE.0.x as i32 - rect.left < 0
+        || WIN_SIZE.0.y as i32 - rect.top < 0
+        || WIN_SIZE.0.y > rect.top as f64 + WIN_SIZE.1.height
+        || WIN_SIZE.0.x > rect.left as f64 + WIN_SIZE.1.width
+    {
+        SetWindowPos(
+            druidwin,
+            0 as _,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE,
+        );
+    } else {
+        winapi::um::winuser::MoveWindow(
+            druidwin,
+            WIN_SIZE.0.x as i32 - rect.left,
+            WIN_SIZE.0.y as i32 - rect.top,
+            WIN_SIZE.1.width as _,
+            WIN_SIZE.1.height as _,
+            (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
+        );
+    }
 }
