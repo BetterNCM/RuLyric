@@ -47,15 +47,12 @@ impl<W: Widget<LyricAppData>> Widget<LyricAppData> for Glow<W> {
             let size = ctx.window().get_size();
             
             // save pos to %AppData%/.betterncm.rulyrics.lastpos.conf
-            println!(
-                "{:#?}",
-                write(
-                    format!(
-                        "{}\\.betterncm.rulyrics.lastpos.conf",
-                        std::env::var("APPDATA").unwrap()
-                    ),
-                    format!("{} {} {} {}", pos.x, pos.y, size.width, size.height),
-                )
+            write(
+                format!(
+                    "{}\\.betterncm.rulyrics.lastpos.conf",
+                    std::env::var("APPDATA").unwrap()
+                ),
+                format!("{} {} {} {}", pos.x, pos.y, size.width, size.height),
             );
         }
 

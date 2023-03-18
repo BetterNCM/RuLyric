@@ -78,7 +78,7 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
             3,
             WIN_SIZE.1.width as _,
             WIN_SIZE.1.height as _,
-            (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
+            (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE) as i32,
         );
     }
 }

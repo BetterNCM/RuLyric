@@ -76,7 +76,7 @@ impl AppDelegate<LyricAppData> for Delegate {
             }
 
             ctx.new_window(
-                WindowDesc::new(ui_builder(*winid))
+                WindowDesc::new(ui_builder(*winid, data.win_data[*winid].clone().align))
                     .show_titlebar(false)
                     .transparent(true)
                     .set_position(WIN_SIZE.0)
@@ -136,6 +136,8 @@ fn init_lyrics_app(
     font_color_s: CefV8Value,
     font_weight_s: CefV8Value,
     font_background_color_s: CefV8Value,
+
+    align: CefV8Value,
 ) {
     fn get_font_conf_from_v8(
         font_family: CefV8Value,
@@ -178,11 +180,25 @@ fn init_lyrics_app(
             font_background_color_s,
         ),
         with_words_lyrics: false,
+        align: {
+            let align = align.get_uint_value();
+            use lyrics_app::LyricAlign::*;
+            println!("Align: {}",align);
+            if align == 0 {
+                Left
+            } else if align == 1 {
+                Center
+            } else if align == 2 {
+                Right
+            } else {
+                Center
+            }
+        },
     };
 
     if unsafe { DATA_SENDER.is_none() } {
         std::thread::spawn(|| {
-            let main_window = WindowDesc::new(ui_builder(0))
+            let main_window = WindowDesc::new(ui_builder(0, win_data.align))
                 .show_titlebar(false)
                 .transparent(true)
                 .set_position(WIN_SIZE.0)
@@ -298,6 +314,11 @@ fn embed_into_with_classname(class_name: &String) {
             .chain(once(0))
             .collect();
         let traywin = winapi::um::winuser::FindWindowW(wide.as_ptr(), null_mut());
+        // print classname and traywin as hex
+        println!(
+            "classname: {:?}, traywin: {:x}",
+            class_name, traywin as usize
+        );
         embed_into_hwnd(traywin as _);
     }
 }
@@ -336,7 +357,7 @@ extern "cdecl" fn betterncm_plugin_main(ctx: &mut PluginContext) -> ::core::ffi:
 
         ctx.add_native_api_raw(
             FULL_V8VALUE_ARGS.as_ptr(),
-            10,
+            11,
             "rulyrics.init_lyrics_app\0".as_ptr() as _,
             init_lyrics_app,
         );
