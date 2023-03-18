@@ -75,7 +75,7 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
         winapi::um::winuser::MoveWindow(
             druidwin,
             WIN_SIZE.0.x as i32 - rect.left,
-            WIN_SIZE.0.y as i32 - rect.top,
+            3,
             WIN_SIZE.1.width as _,
             WIN_SIZE.1.height as _,
             (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER) as i32,
