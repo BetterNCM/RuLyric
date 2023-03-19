@@ -124,6 +124,28 @@ fn edit_data(callback: impl FnOnce(&mut LyricAppData) + Send + std::marker::Sync
 }
 
 #[betterncm_native_call]
+fn reset_pos() {
+    unsafe {
+        let druidwin = WIN_HWND.unwrap() as _;
+        use winapi::um::winuser::*;
+        winapi::um::winuser::MoveWindow(
+            druidwin,
+            0,
+            3,
+            WIN_SIZE.1.width as _,
+            WIN_SIZE.1.height as _,
+            (SWP_FRAMECHANGED
+                | SWP_NOZORDER
+                | SWP_NOOWNERZORDER
+                | SWP_NOSIZE
+                | SWP_NOMOVE
+                | SWP_NOZORDER
+                | SWP_NOACTIVATE) as i32,
+        );
+    }
+}
+
+#[betterncm_native_call]
 fn init_lyrics_app(
     font_family: CefV8Value,
     font_size: CefV8Value,
@@ -183,7 +205,7 @@ fn init_lyrics_app(
         align: {
             let align = align.get_uint_value();
             use lyrics_app::LyricAlign::*;
-            println!("Align: {}",align);
+            println!("Align: {}", align);
             if align == 0 {
                 Left
             } else if align == 1 {
@@ -388,6 +410,13 @@ extern "cdecl" fn betterncm_plugin_main(ctx: &mut PluginContext) -> ::core::ffi:
             2,
             "rulyrics.seek\0".as_ptr() as _,
             seek,
+        );
+
+        ctx.add_native_api_raw(
+            FULL_V8VALUE_ARGS.as_ptr(),
+            0,
+            "rulyrics.reset_pos\0".as_ptr() as _,
+            reset_pos,
         );
     }
 
