@@ -71,9 +71,12 @@ function MainMenu() {
 
     const [align, setAlign] = useLocalStorage("rulyrics.align", 0)
 
+    const [inited, setInited] = React.useState(false)
+
     const [taskbar, setTaskbar] = useLocalStorage("rulyrics.taskbar", false);
 
     React.useEffect(() => {
+        if (!inited) return;
         if (taskbar) {
             setTimeout(() => {
                 betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
@@ -240,13 +243,14 @@ function MainMenu() {
     function initRustApp() {
         betterncm_native.native_plugin.call('rulyrics.init_lyrics_app', [...fontConfig, ...secFontConfig, align]);
         if (taskbar) {
+            setInited(true);
             setTimeout(() => {
                 betterncm_native.native_plugin.call('rulyrics.embed_into_taskbar', [])
             }, 500);
         }
     }
 
-    React.useEffect(initRustApp, [align])
+    React.useEffect(() => { setTimeout(initRustApp, 2000) }, [])
 
     return (<Stack spacing={2}>
 
