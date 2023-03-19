@@ -58,8 +58,8 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
     );
 
     if WIN_SIZE.0.x as i32 - rect.left < 0
-        || WIN_SIZE.0.y as i32 - rect.top < 0
-        || WIN_SIZE.0.y > rect.top as f64 + WIN_SIZE.1.height
+        // || WIN_SIZE.0.y as i32 - rect.top < 0
+        // || WIN_SIZE.0.y > rect.top as f64 + WIN_SIZE.1.height
         || WIN_SIZE.0.x > rect.left as f64 + WIN_SIZE.1.width
     {
         SetWindowPos(
@@ -69,7 +69,7 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
             0,
             0,
             0,
-            SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE,
+            SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE,
         );
     } else {
         winapi::um::winuser::MoveWindow(
@@ -78,7 +78,7 @@ pub unsafe fn embed_into_hwnd(traywin: *const i8) {
             3,
             WIN_SIZE.1.width as _,
             WIN_SIZE.1.height as _,
-            (SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) as i32,
+            (SWP_FRAMECHANGED | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) as i32,
         );
     }
 }
