@@ -54,6 +54,7 @@ pub fn ui_builder(win_num: usize, align: LyricAlign) -> impl Widget<LyricAppData
                 LyricAlign::Center => druid::widget::CrossAxisAlignment::Center,
                 LyricAlign::Right => druid::widget::CrossAxisAlignment::End,
             })
+            .padding((10.,0.))
             ,
         win_num,
     )
