@@ -227,7 +227,7 @@ function MainMenu() {
                                 _currentLyrics[_currentLine].translatedLyric,
                                 Math.max(ms - _currentLyrics[_currentLine].time, 0)
                             ])
-                    } else {
+                    } else if (_currentLyrics[_currentLine]?.time){
                         const time = Math.round(ms - _currentLyrics[_currentLine].time);
                         if (time > 100)
                             betterncm_native.native_plugin.call('rulyrics.seek', [
